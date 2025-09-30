@@ -14,7 +14,7 @@ from backend.schemas import ProblemResponse, ProblemDetail, ProblemCreate, Submi
 
 router = APIRouter()
 
-@router.get("/", response_model=List[ProblemResponse])
+@router.get("", response_model=List[ProblemResponse])
 async def get_problems(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
