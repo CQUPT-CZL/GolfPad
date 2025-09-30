@@ -24,15 +24,12 @@ interface ProblemLeaderboardEntry {
 const Leaderboard: React.FC = () => {
   const [globalLeaderboard, setGlobalLeaderboard] = useState<LeaderboardEntry[]>([])
   const [problemLeaderboard, setProblemLeaderboard] = useState<ProblemLeaderboardEntry[]>([])
-  const [languageLeaderboard, setLanguageLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<number | null>(null)
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('python')
   const [problems, setProblems] = useState<any[]>([])
 
   useEffect(() => {
     fetchGlobalLeaderboard()
-    fetchLanguageLeaderboard()
     fetchProblems()
   }, [])
 
@@ -42,9 +39,7 @@ const Leaderboard: React.FC = () => {
     }
   }, [selectedProblem])
 
-  useEffect(() => {
-    fetchLanguageLeaderboard()
-  }, [selectedLanguage])
+  
 
   const fetchGlobalLeaderboard = async () => {
     try {
@@ -67,14 +62,7 @@ const Leaderboard: React.FC = () => {
     }
   }
 
-  const fetchLanguageLeaderboard = async () => {
-    try {
-      const response = await api.get(`/leaderboard/languages/${selectedLanguage}`)
-      setLanguageLeaderboard(response.data)
-    } catch (error) {
-      message.error('获取语言排行榜失败')
-    }
-  }
+  
 
   const fetchProblems = async () => {
     try {
@@ -220,31 +208,7 @@ const Leaderboard: React.FC = () => {
               locale={{ emptyText: '暂无数据' }}
             />
           </TabPane>
-
-          <TabPane tab={<span><StarOutlined />语言排行榜</span>} key="language">
-            <div className="mb-4">
-              <Select
-                value={selectedLanguage}
-                style={{ width: 150 }}
-                onChange={setSelectedLanguage}
-              >
-                <Option value="python">Python</Option>
-                <Option value="javascript">JavaScript</Option>
-                <Option value="cpp">C++</Option>
-                <Option value="java">Java</Option>
-                <Option value="go">Go</Option>
-                <Option value="rust">Rust</Option>
-              </Select>
-            </div>
-            <Table
-              columns={globalColumns}
-              dataSource={languageLeaderboard}
-              rowKey="username"
-              pagination={{ pageSize: 20 }}
-              loading={loading}
-              locale={{ emptyText: '暂无数据' }}
-            />
-          </TabPane>
+          
         </Tabs>
       </Card>
     </div>
