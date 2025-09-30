@@ -1,8 +1,57 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Button, Tag, Spin, message } from 'antd'
+import { Card, Button, Tag, Spin, message, Collapse } from 'antd'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeftOutlined, CodeOutlined } from '@ant-design/icons'
+import {
+  ArrowLeftOutlined,
+  CodeOutlined,
+  RightOutlined,
+} from '@ant-design/icons'
 import api from '../services/api'
+
+const colors = [
+  'rgb(0, 0, 0)',
+  'rgb(30, 147, 255)',
+  'rgb(250, 61, 49)',
+  'rgb(78, 204, 48)',
+  'rgb(255, 221, 0)',
+  'rgb(153, 153, 153)',
+  'rgb(229, 59, 163)',
+  'rgb(255, 133, 28)',
+  'rgb(136, 216, 241)',
+  'rgb(147, 17, 49)',
+]
+
+const PixelGrid = ({ matrix }: { matrix: number[][] }) => {
+  if (!matrix || matrix.length === 0) return null
+  const height = matrix.length
+  const width = matrix[0].length
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${width}, 20px)`,
+        gridGap: '2px',
+        backgroundColor: '#f0f0f0',
+        border: '1px solid #d9d9d9',
+        padding: '4px',
+        borderRadius: '4px',
+      }}
+    >
+      {matrix.flat().map((colorIndex, idx) => (
+        <div
+          key={idx}
+          style={{
+            width: '20px',
+            height: '20px',
+            backgroundColor: colors[colorIndex] || 'transparent',
+            border: '1px solid #fff',
+            borderRadius: '2px',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 interface Problem {
   id: number
@@ -10,7 +59,12 @@ interface Problem {
   title: string
   description: string
   difficulty: string
-  test_cases: any
+  test_cases: {
+    train?: Array<{
+      input: number[][]
+      output: number[][]
+    }>
+  }
   created_at: string
 }
 
@@ -107,29 +161,23 @@ const ProblemDetail: React.FC = () => {
 
       {problem.test_cases && (
         <Card title="示例数据" className="shadow-sm">
-          <div className="space-y-4">
-            {problem.test_cases.train && problem.test_cases.train.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">训练数据示例:</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-2">
-                    <div>
-                      <span className="font-medium">输入:</span>
-                      <pre className="mt-1 text-sm bg-white p-2 rounded border">
-                        {JSON.stringify(problem.test_cases.train[0]?.input, null, 2)}
-                      </pre>
-                    </div>
-                    <div>
-                      <span className="font-medium">输出:</span>
-                      <pre className="mt-1 text-sm bg-white p-2 rounded border">
-                        {JSON.stringify(problem.test_cases.train[0]?.output, null, 2)}
-                      </pre>
-                    </div>
+          <Collapse accordion>
+            {problem.test_cases.train?.slice(0, 3).map((testCase, index) => (
+              <Collapse.Panel header={`示例 ${index + 1}`} key={index}>
+                <div className="grid grid-cols-[1fr_auto_1fr] gap-6 items-center justify-items-center">
+                  <div className="text-center">
+                    <PixelGrid matrix={testCase.input} />
+                  </div>
+                  <div className="text-2xl text-gray-400">
+                    <RightOutlined />
+                  </div>
+                  <div className="text-center">
+                    <PixelGrid matrix={testCase.output} />
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              </Collapse.Panel>
+            ))}
+          </Collapse>
         </Card>
       )}
 
