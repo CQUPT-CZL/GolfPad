@@ -7,7 +7,8 @@ import {
   UserOutlined, 
   LoginOutlined,
   LogoutOutlined,
-  DashboardOutlined
+  DashboardOutlined,
+  UploadOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -32,11 +33,18 @@ const Header: React.FC = () => {
   ]
 
   if (user) {
-    menuItems.push({
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: <Link to="/dashboard" style={{ color: 'inherit', textDecoration: 'none' }}>个人中心</Link>,
-    })
+    menuItems.push(
+      {
+        key: '/batch-upload',
+        icon: <UploadOutlined />,
+        label: <Link to="/batch-upload" style={{ color: 'inherit', textDecoration: 'none' }}>批量提交</Link>,
+      },
+      {
+        key: '/dashboard',
+        icon: <DashboardOutlined />,
+        label: <Link to="/dashboard" style={{ color: 'inherit', textDecoration: 'none' }}>个人中心</Link>,
+      }
+    )
   }
 
   const userMenuItems = user ? [

@@ -166,8 +166,8 @@ async def get_my_stats(
     return {
         "user_id": current_user.id,
         "username": current_user.username,
-        "total_score": stats.total_score,
-        "problems_solved": stats.problems_solved,
-        "total_submissions": stats.total_submissions,
+        "total_score": stats.total_score or 0,
+        "problems_solved": stats.problems_solved or 0,
+        "total_submissions": stats.total_submissions or 0,
         "rank": stats.rank
     }

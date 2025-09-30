@@ -124,7 +124,7 @@ async def update_user_stats(db: Session, user_id: int, problem_id: int, code_len
     user_stats.total_submissions += 1
     db.commit()
 
-@router.get("/", response_model=List[SubmissionResponse])
+@router.get("", response_model=List[SubmissionResponse])
 async def get_my_submissions(
     skip: int = 0,
     limit: int = 50,

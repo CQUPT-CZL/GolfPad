@@ -136,3 +136,27 @@ class PaginatedResponse(BaseModel):
     page: int
     size: int
     pages: int
+
+# Batch submission schemas
+class BatchSubmissionResponse(BaseModel):
+    id: int
+    user_id: int
+    filename: str
+    total_problems: int
+    processed_problems: int
+    total_score: int
+    status: str
+    error_message: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class BatchSubmissionStatus(BaseModel):
+    id: int
+    status: str
+    processed_problems: int
+    total_problems: int
+    total_score: int
+    error_message: Optional[str] = None

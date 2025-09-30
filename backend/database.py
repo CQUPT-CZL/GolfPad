@@ -7,8 +7,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# Database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./golfpad.db")
+# Database URL - 将数据库文件放在项目根目录
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///../golfpad.db")
 
 # Create engine
 engine = create_engine(

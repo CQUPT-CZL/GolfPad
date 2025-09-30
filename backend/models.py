@@ -42,6 +42,7 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     problem_id = Column(Integer, ForeignKey("problems.id"), nullable=False)
+    batch_submission_id = Column(Integer, ForeignKey("batch_submissions.id"), nullable=True)  # Link to batch submission
     language = Column(String(20), nullable=False)  # python, javascript, cpp, etc.
     code = Column(Text, nullable=False)
     code_length = Column(Integer, nullable=False)  # Character count
@@ -54,6 +55,7 @@ class Submission(Base):
     # Relationships
     user = relationship("User", back_populates="submissions")
     problem = relationship("Problem", back_populates="submissions")
+    batch_submission = relationship("BatchSubmission", back_populates="submissions")
 
 class UserStats(Base):
     __tablename__ = "user_stats"
@@ -82,3 +84,23 @@ class ProblemStats(Base):
     
     # Relationships
     problem = relationship("Problem")
+
+class BatchSubmission(Base):
+    __tablename__ = "batch_submissions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    filename = Column(String(255), nullable=False)  # Original zip filename
+    total_problems = Column(Integer, default=0)  # Total number of problems in zip
+    processed_problems = Column(Integer, default=0)  # Number of problems processed
+    total_score = Column(Integer, default=0)  # Sum of all code lengths
+    status = Column(String(20), default="processing")  # processing, completed, failed
+    error_message = Column(Text)  # Error details if failed
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    user = relationship("User")
+    submissions = relationship("Submission", back_populates="batch_submission")
+
+# Add batch_submission relationship to existing Submission model

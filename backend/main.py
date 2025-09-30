@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from backend.database import engine, Base
-from backend.routers import problems, submissions, users, leaderboard
+from backend.routers import problems, submissions, users, leaderboard, batch_submissions
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -34,6 +34,7 @@ app.include_router(problems.router, prefix="/api/problems", tags=["problems"])
 app.include_router(submissions.router, prefix="/api/submissions", tags=["submissions"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(leaderboard.router, prefix="/api/leaderboard", tags=["leaderboard"])
+app.include_router(batch_submissions.router, prefix="/api/batch-submissions", tags=["batch-submissions"])
 
 # Serve static files (for frontend)
 if os.path.exists("frontend/dist"):
