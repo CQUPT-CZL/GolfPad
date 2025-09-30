@@ -193,6 +193,7 @@ async def evaluate_code(code: str, language: str, test_cases: Dict[str, Any]) ->
             test_results = []
             total_time = 0
             max_memory = 0
+            passed_total = 0
             
             # 遍历所有类型的测试用例（train, test, arc-gen等）
             for test_type, test_case_list in test_cases.items():
@@ -207,11 +208,12 @@ async def evaluate_code(code: str, language: str, test_cases: Dict[str, Any]) ->
                     result = await run_test_case(
                         source_file, executable, config, test_case, f"{test_type}_{i}"
                     )
-                    test_results.append(result)
                     print(f"📊 Test result: {result}")
                     
                     if result["status"] != "passed":
                         print(f"❌ {test_type} test case {i} failed, stopping evaluation")
+                        # 在失败时保留详细的失败结果，便于排查
+                        test_results.append(result)
                         return EvaluationResult(
                             status="failed",
                             test_results=test_results,
@@ -221,6 +223,7 @@ async def evaluate_code(code: str, language: str, test_cases: Dict[str, Any]) ->
                     
                     total_time += result.get("execution_time", 0)
                     max_memory = max(max_memory, result.get("memory_usage", 0))
+                    passed_total += 1
                 
                 print(f"✅ All {test_type} test cases passed")
             
@@ -228,9 +231,10 @@ async def evaluate_code(code: str, language: str, test_cases: Dict[str, Any]) ->
             print(f"⏱️ Total execution time: {total_time:.3f}s")
             print(f"💾 Max memory usage: {max_memory} bytes")
             
+            # 通过时仅返回“通过”二字，避免出现 summary 或分隔符
             return EvaluationResult(
                 status="passed",
-                test_results=test_results,
+                test_results=[{"message": "通过"}],
                 execution_time=total_time,
                 memory_usage=max_memory
             )
