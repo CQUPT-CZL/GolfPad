@@ -16,7 +16,7 @@ function App() {
     <Layout style={{ minHeight: '100vh' }}>
       <Header />
       <Content style={{ flex: 1, padding: '24px', background: '#f5f5f5' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', background: '#fff', borderRadius: '8px', padding: '24px', minHeight: 'calc(100vh - 200px)' }}>
+        <div style={{ margin: '0 auto', background: '#fff', borderRadius: '8px', padding: '24px', minHeight: 'calc(100vh - 200px)', width: '100%' }}>
           <Routes>
             <Route path="/" element={<ProblemList />} />
             <Route path="/problems" element={<ProblemList />} />
