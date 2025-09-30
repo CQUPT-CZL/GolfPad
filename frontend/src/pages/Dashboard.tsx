@@ -3,6 +3,7 @@ import { Card, Row, Col, Statistic, Table, Tag, Button, Spin } from 'antd'
 import { TrophyOutlined, CodeOutlined, ClockCircleOutlined, CrownOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import ScoreLineChart from '../components/ScoreLineChart'
 import api from '../services/api'
 
 interface UserStats {
@@ -220,6 +221,15 @@ const Dashboard: React.FC = () => {
             </Card>
           </Col>
         </Row>
+
+        {/* 折线图放在个人总分下面（自适应容器宽度） */}
+        <Card title="个人分数折线图" className="shadow-sm">
+          {scores.length > 0 ? (
+            <ScoreLineChart scores={scores} height={320} />
+          ) : (
+            <div className="text-gray-600" style={{ padding: '8px 0' }}>暂无分数数据</div>
+          )}
+        </Card>
 
         <Card title="最近提交记录" className="shadow-sm">
           <Table
