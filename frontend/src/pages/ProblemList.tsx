@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Card, List, Tag, Button, Select, Input, Spin, message } from 'antd'
+import { Card, List, Tag, Button, Select, Input, Spin, message, Pagination } from 'antd'
 import { Link } from 'react-router-dom'
 import { SearchOutlined, CodeOutlined } from '@ant-design/icons'
 import api from '../services/api'
@@ -21,19 +21,23 @@ const ProblemList: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [difficulty, setDifficulty] = useState<string>('')
   const [searchText, setSearchText] = useState('')
+  const [page, setPage] = useState<number>(1)
+  const size = 30
+  const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
     fetchProblems()
-  }, [difficulty])
+  }, [difficulty, page])
 
   const fetchProblems = async () => {
     try {
       setLoading(true)
-      const params: any = {}
+      const params: any = { page, size }
       if (difficulty) params.difficulty = difficulty
-      
+
       const response = await api.get('/problems', { params })
-      setProblems(response.data)
+      setProblems(response.data.items || [])
+      setTotal(response.data.total || 0)
     } catch (error) {
       message.error('获取题目列表失败')
     } finally {
@@ -81,7 +85,7 @@ const ProblemList: React.FC = () => {
           🏌️‍♂️ 代码高尔夫题目
         </h1>
         <div style={{ fontSize: '14px', color: '#666' }}>
-          共 {filteredProblems.length} 道题目
+          共 {total} 道题目
         </div>
       </div>
 
@@ -198,6 +202,16 @@ const ProblemList: React.FC = () => {
           )}
         />
       </Spin>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+        <Pagination
+          current={page}
+          pageSize={size}
+          total={total}
+          showSizeChanger={false}
+          onChange={(p) => setPage(p)}
+        />
+      </div>
 
       {!loading && filteredProblems.length === 0 && (
         <div style={{ 

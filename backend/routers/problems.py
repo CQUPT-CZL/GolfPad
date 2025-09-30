@@ -10,27 +10,39 @@ import os
 
 from backend.database import get_db
 from backend.models import Problem, Submission, User
-from backend.schemas import ProblemResponse, ProblemDetail, ProblemCreate, SubmissionHistory, EvaluationResult
+from backend.schemas import ProblemResponse, ProblemDetail, ProblemCreate, SubmissionHistory, EvaluationResult, PaginatedResponse
 from backend.evaluation import evaluate_code
 from pydantic import BaseModel
 
 router = APIRouter()
 
-@router.get("", response_model=List[ProblemResponse])
+@router.get("", response_model=PaginatedResponse)
 async def get_problems(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
+    page: int = Query(1, ge=1),
+    size: int = Query(30, ge=1, le=100),
     difficulty: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """Get list of problems with pagination and filtering"""
     query = db.query(Problem)
-    
+
     if difficulty:
         query = query.filter(Problem.difficulty == difficulty)
-    
-    problems = query.offset(skip).limit(limit).all()
-    return problems
+
+    total = query.count()
+    offset = (page - 1) * size
+    items_db = query.offset(offset).limit(size).all()
+    # Convert ORM objects to response models to ensure proper JSON encoding
+    items = [ProblemResponse.model_validate(p, from_attributes=True) for p in items_db]
+    pages = (total + size - 1) // size if size > 0 else 0
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "size": size,
+        "pages": pages,
+    }
 
 @router.get("/{problem_id}", response_model=ProblemDetail)
 async def get_problem(problem_id: int, db: Session = Depends(get_db)):

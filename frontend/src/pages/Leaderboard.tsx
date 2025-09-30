@@ -66,10 +66,11 @@ const Leaderboard: React.FC = () => {
 
   const fetchProblems = async () => {
     try {
-      const response = await api.get('/problems?limit=100')
-      setProblems(response.data)
-      if (response.data.length > 0) {
-        setSelectedProblem(response.data[0].id)
+      const response = await api.get('/problems', { params: { page: 1, size: 100 } })
+      const items = response.data.items || []
+      setProblems(items)
+      if (items.length > 0) {
+        setSelectedProblem(items[0].id)
       }
     } catch (error) {
       message.error('获取题目列表失败')
