@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, Button, Tag, Spin, message, Collapse } from 'antd'
 import { useParams, Link } from 'react-router-dom'
 import {
@@ -7,8 +7,9 @@ import {
   RightOutlined,
 } from '@ant-design/icons'
 import api from '../services/api'
-import CodeEditor from '../components/CodeEditor'
+import CodeEditor, { CodeEditorRef } from '../components/CodeEditor'
 import CodeExecutionResult from '../components/CodeExecutionResult'
+import SubmissionHistory from '../components/SubmissionHistory'
 
 const colors = [
   'rgb(0, 0, 0)',
@@ -110,10 +111,14 @@ const ProblemDetail: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [executionResult, setExecutionResult] = useState<any>(null)
   const [isExecuting, setIsExecuting] = useState(false)
+  const [initialCode, setInitialCode] = useState<string>('')
+  const [initialLanguage, setInitialLanguage] = useState<string>('python')
+  const codeEditorRef = useRef<CodeEditorRef>(null)
 
   useEffect(() => {
     if (id) {
       fetchProblem(parseInt(id))
+      fetchLatestSubmission(parseInt(id))
     }
   }, [id])
 
@@ -126,6 +131,20 @@ const ProblemDetail: React.FC = () => {
       message.error('获取题目详情失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchLatestSubmission = async (problemId: number) => {
+    try {
+      const response = await api.get(`/submissions?problem_id=${problemId}&limit=1`)
+      if (response.data && response.data.length > 0) {
+        const latestSubmission = response.data[0]
+        setInitialCode(latestSubmission.code)
+        setInitialLanguage(latestSubmission.language)
+      }
+    } catch (error) {
+      // 如果没有提交记录或获取失败，使用默认代码
+      console.log('没有找到历史提交记录，使用默认代码')
     }
   }
 
@@ -161,12 +180,23 @@ const ProblemDetail: React.FC = () => {
       
       setExecutionResult(response.data)
       
+      // 只有运行通过的代码才提交到记录
       if (response.data.status === 'passed') {
-        message.success('🎉 所有测试用例通过！')
+        try {
+          await api.post('/submissions', {
+            problem_id: problem.id,
+            code,
+            language
+          })
+          message.success('🎉 所有测试用例通过！代码已提交到记录')
+        } catch (saveError) {
+          console.warn('保存提交记录失败:', saveError)
+          message.success('🎉 所有测试用例通过！但提交记录保存失败')
+        }
       } else if (response.data.status === 'failed') {
-        message.warning('⚠️ 部分测试用例未通过')
+        message.warning('⚠️ 部分测试用例未通过，代码未提交')
       } else {
-        message.error('❌ 代码执行出错')
+        message.error('❌ 代码执行出错，代码未提交')
       }
     } catch (error) {
       message.error('代码执行失败，请检查网络连接')
@@ -177,6 +207,15 @@ const ProblemDetail: React.FC = () => {
       })
     } finally {
       setIsExecuting(false)
+    }
+  }
+
+  const handleLoadCodeFromHistory = (code: string, language: string) => {
+    setInitialCode(code)
+    setInitialLanguage(language)
+    // 通知CodeEditor组件更新代码
+    if (codeEditorRef.current) {
+      codeEditorRef.current.updateCode(code, language)
     }
   }
 
@@ -262,20 +301,20 @@ const ProblemDetail: React.FC = () => {
       )}
 
       <CodeEditor
+        ref={codeEditorRef}
+        initialCode={initialCode}
+        initialLanguage={initialLanguage}
         onRunCode={handleRunCode}
-        onSaveCode={(code, language) => {
-          // TODO: 实现代码保存功能
-          console.log('保存代码:', { code, language })
-        }}
-        onSubmitCode={(code, language) => {
-          // TODO: 实现代码提交功能
-          console.log('提交代码:', { code, language })
-        }}
       />
 
       <CodeExecutionResult 
         result={executionResult}
         loading={isExecuting}
+      />
+
+      <SubmissionHistory 
+        problemId={problem.id}
+        onLoadCode={handleLoadCodeFromHistory}
       />
     </div>
   )

@@ -54,12 +54,29 @@ async def get_problem_submissions(
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
     
-    query = db.query(Submission).filter(Submission.problem_id == problem_id)
+    # Join with User table to get username
+    query = db.query(Submission, User.username).join(User).filter(Submission.problem_id == problem_id)
     
     if user_id:
         query = query.filter(Submission.user_id == user_id)
     
-    submissions = query.order_by(Submission.created_at.desc()).offset(skip).limit(limit).all()
+    results = query.order_by(Submission.created_at.desc()).offset(skip).limit(limit).all()
+    
+    # Convert to SubmissionHistory format
+    submissions = []
+    for submission, username in results:
+        submissions.append(SubmissionHistory(
+            id=submission.id,
+            user_id=submission.user_id,
+            username=username,
+            language=submission.language,
+            code=submission.code,
+            code_length=submission.code_length,
+            status=submission.status,
+            execution_time=submission.execution_time,
+            created_at=submission.created_at
+        ))
+    
     return submissions
 
 @router.post("/", response_model=ProblemResponse)

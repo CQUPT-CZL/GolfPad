@@ -70,9 +70,13 @@ class SubmissionResponse(SubmissionBase):
 
 class SubmissionHistory(BaseModel):
     id: int
+    user_id: int
+    username: str  # 添加用户名字段
     language: str
+    code: str  # 添加代码字段，用于查看代码
     code_length: int
     status: str
+    execution_time: Optional[float] = None
     created_at: datetime
     
     class Config:

@@ -14,6 +14,8 @@ from backend.evaluation import evaluate_code
 
 router = APIRouter()
 
+# Support both with and without trailing slash for POST to avoid 405
+@router.post("", response_model=SubmissionResponse)
 @router.post("/", response_model=SubmissionResponse)
 async def submit_code(
     submission: SubmissionCreate,
