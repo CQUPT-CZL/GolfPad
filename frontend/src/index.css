@@ -1,0 +1,101 @@
+@import 'antd/dist/reset.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.max-w-7xl {
+  max-width: 80rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-gray-600 {
+  color: #6b7280;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+/* 修复Ant Design样式冲突 */
+.ant-layout {
+  min-height: 100vh;
+}
+
+.ant-layout-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保页面内容正确显示 */
+.page-container {
+  flex: 1;
+  padding: 24px;
+  background: #fff;
+}
+
+/* 修复卡片间距 */
+.ant-card {
+  margin-bottom: 16px;
+}
+
+/* 修复表格样式 */
+.ant-table-wrapper {
+  background: #fff;
+}
+
+/* 修复按钮样式 */
+.ant-btn {
+  border-radius: 6px;
+}
+
+/* 修复输入框样式 */
+.ant-input, .ant-input-password {
+  border-radius: 6px;
+}
+
+/* 修复选择器样式 */
+.ant-select .ant-select-selector {
+  border-radius: 6px;
+}
