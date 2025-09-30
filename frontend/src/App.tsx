@@ -6,6 +6,7 @@ import ProblemDetail from './pages/ProblemDetail'
 import Dashboard from './pages/Dashboard'
 import Leaderboard from './pages/Leaderboard'
 import BatchUpload from './pages/BatchUpload'
+import ExportLatest from './pages/ExportLatest'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import './App.css'
@@ -25,6 +26,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/batch-upload" element={<BatchUpload />} />
+            <Route path="/export" element={<ExportLatest />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
           </Routes>

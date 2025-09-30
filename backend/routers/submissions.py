@@ -3,7 +3,11 @@ Submissions API routes
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
+import io
+import zipfile
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from typing import List, Optional
 
 from backend.database import get_db
@@ -182,3 +186,42 @@ async def get_submission_status(
         "execution_time": submission.execution_time,
         "memory_usage": submission.memory_usage
     }
+
+# Export latest submissions for current user as a ZIP
+@router.get("/export/latest")
+async def export_latest_submissions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Export the latest submission of each problem (001.py ~ 400.py) for the current user as submission.zip.
+    Only include files for problems where the user has a submission.
+    """
+    # Subquery to get latest submission per problem for this user
+    latest_subq = (
+        db.query(Submission.problem_id, func.max(Submission.created_at).label("max_created_at"))
+        .filter(Submission.user_id == current_user.id)
+        .group_by(Submission.problem_id)
+        .subquery()
+    )
+
+    # Join to fetch the actual Submission rows and related Problem (limit to 1..400)
+    rows = (
+        db.query(Submission, Problem)
+        .join(latest_subq, (Submission.problem_id == latest_subq.c.problem_id) & (Submission.created_at == latest_subq.c.max_created_at))
+        .join(Problem, Submission.problem_id == Problem.id)
+        .filter(Problem.id <= 400)
+        .all()
+    )
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="暂无可导出的提交")
+
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for submission, problem in rows:
+            filename = f"{problem.id:03d}.py"
+            zf.writestr(filename, submission.code)
+
+    buffer.seek(0)
+    headers = {"Content-Disposition": 'attachment; filename="submission.zip"'}
+    return StreamingResponse(buffer, media_type="application/zip", headers=headers)

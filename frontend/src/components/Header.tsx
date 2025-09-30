@@ -8,7 +8,8 @@ import {
   LoginOutlined,
   LogoutOutlined,
   DashboardOutlined,
-  UploadOutlined
+  UploadOutlined,
+  DownloadOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -50,6 +51,11 @@ const Header: React.FC = () => {
       key: '/batch-upload',
       icon: <UploadOutlined />,
       label: <Link to="/batch-upload" style={{ color: 'inherit', textDecoration: 'none' }}>批量提交</Link>,
+    })
+    menuItems.push({
+      key: '/export',
+      icon: <DownloadOutlined />,
+      label: <Link to="/export" style={{ color: 'inherit', textDecoration: 'none' }}>导出最新提交</Link>,
     })
   }
 
