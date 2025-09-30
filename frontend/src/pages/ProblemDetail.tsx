@@ -21,6 +21,40 @@ const colors = [
   'rgb(147, 17, 49)',
 ]
 
+const ColorPalette = ({ usedColors }: { usedColors: number[] }) => {
+  if (usedColors.length === 0) return null
+
+  return (
+    <div className="mb-4 p-3 bg-gray-50 rounded-md border border-gray-200">
+      <div className="font-semibold text-gray-700 mb-2">颜色图例:</div>
+      <table className="w-full">
+        <tbody>
+          <tr>
+            {usedColors.map((colorIndex) => (
+              <td key={colorIndex} className="text-center p-2 border border-gray-300">
+                <div className="flex flex-col items-center gap-1">
+                  <div
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      backgroundColor: colors[colorIndex],
+                      border: '1px solid #ccc',
+                      borderRadius: '3px',
+                    }}
+                  />
+                  <span className="text-xs text-gray-600 font-mono">
+                    {colorIndex}
+                  </span>
+                </div>
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 const PixelGrid = ({ matrix }: { matrix: number[][] }) => {
   if (!matrix || matrix.length === 0) return null
   const height = matrix.length
@@ -130,6 +164,14 @@ const ProblemDetail: React.FC = () => {
     )
   }
 
+  const usedColorsInSamples = Array.from(
+    new Set(
+      problem.test_cases.train
+        ?.slice(0, 3)
+        .flatMap(tc => [...tc.input.flat(), ...tc.output.flat()]) ?? []
+    )
+  ).sort((a, b) => a - b)
+
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4">
@@ -161,6 +203,7 @@ const ProblemDetail: React.FC = () => {
 
       {problem.test_cases && (
         <Card title="示例数据" className="shadow-sm">
+          <ColorPalette usedColors={usedColorsInSamples} />
           <Collapse accordion>
             {problem.test_cases.train?.slice(0, 3).map((testCase, index) => (
               <Collapse.Panel header={`示例 ${index + 1}`} key={index}>
