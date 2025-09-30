@@ -214,3 +214,14 @@ class BatchSubmissionStatus(BaseModel):
     total_problems: int
     total_score: int
     error_message: Optional[str] = None
+
+class UserProblemScore(BaseModel):
+    problem_id: int
+    task_id: str
+    title: str
+    code_length: Optional[int] = None
+    score: float
+
+class UserScoresResponse(BaseModel):
+    total_score: float
+    items: List[UserProblemScore]

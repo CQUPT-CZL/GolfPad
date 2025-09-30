@@ -12,6 +12,19 @@ interface UserStats {
   rank: number | null
 }
 
+interface ScoreItem {
+  problem_id: number
+  task_id: string
+  title: string
+  code_length?: number | null
+  score: number
+}
+
+interface ScoresResponse {
+  total_score: number
+  items: ScoreItem[]
+}
+
 interface Submission {
   id: number
   problem_id: number
@@ -25,6 +38,8 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [scores, setScores] = useState<ScoreItem[]>([])
+  const [customTotal, setCustomTotal] = useState<number>(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,13 +51,34 @@ const Dashboard: React.FC = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true)
-      const [statsResponse, submissionsResponse] = await Promise.all([
+      const [statsResult, submissionsResult, scoresResult] = await Promise.allSettled([
         api.get('/users/me/stats'),
-        api.get('/submissions?limit=10')
+        api.get('/submissions?limit=10'),
+        api.get('/users/me/scores')
       ])
-      
-      setStats(statsResponse.data)
-      setSubmissions(submissionsResponse.data)
+
+      if (statsResult.status === 'fulfilled') {
+        setStats(statsResult.value.data)
+      } else {
+        console.warn('Failed to fetch stats:', statsResult.reason)
+      }
+
+      if (submissionsResult.status === 'fulfilled') {
+        setSubmissions(submissionsResult.value.data)
+      } else {
+        console.warn('Failed to fetch submissions:', submissionsResult.reason)
+      }
+
+      if (scoresResult.status === 'fulfilled') {
+        const scoresData: ScoresResponse = scoresResult.value.data
+        setScores(scoresData.items || [])
+        const roundedTotal = Math.round(((scoresData.total_score ?? 0) + Number.EPSILON) * 1000) / 1000
+        setCustomTotal(roundedTotal)
+      } else {
+        console.warn('Failed to fetch scores:', scoresResult.reason)
+        setScores([])
+        setCustomTotal(0)
+      }
     } catch (error) {
       console.error('Failed to fetch user data:', error)
     } finally {
@@ -115,6 +151,44 @@ const Dashboard: React.FC = () => {
     },
   ]
 
+  const scoreColumns = [
+    {
+      title: '题目',
+      dataIndex: 'title',
+      key: 'title',
+      render: (title: string, record: ScoreItem) => (
+        <Link to={`/problems/${record.problem_id}`}>
+          <Button type="link" size="small">{title}</Button>
+        </Link>
+      ),
+    },
+    {
+      title: '题目ID',
+      dataIndex: 'problem_id',
+      key: 'problem_id',
+      render: (problemId: number) => (
+        <Link to={`/problems/${problemId}`}>
+          <Button type="link" size="small">#{problemId}</Button>
+        </Link>
+      ),
+      width: 100,
+    },
+    {
+      title: '最佳代码长度',
+      dataIndex: 'code_length',
+      key: 'code_length',
+      render: (length: number | null | undefined) => length ? `${length} 字符` : '未通过',
+      width: 160,
+    },
+    {
+      title: '分数（2500 - 长度）',
+      dataIndex: 'score',
+      key: 'score',
+      render: (score: number) => score.toFixed(3),
+      width: 180,
+    },
+  ]
+
   if (!user) {
     return (
       <div className="text-center py-12">
@@ -135,47 +209,13 @@ const Dashboard: React.FC = () => {
 
       <Spin spinning={loading}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
+          <Col xs={24}>
             <Card>
               <Statistic
-                title="总分数"
-                value={stats?.total_score || 0}
-                prefix={<TrophyOutlined />}
+                title="个人总分（规则：通过题得 2500-代码长度；未通过 0.001）"
+                value={Math.round((customTotal + Number.EPSILON) * 1000) / 1000}
                 suffix="分"
                 valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="已解决题目"
-                value={stats?.problems_solved || 0}
-                prefix={<CodeOutlined />}
-                suffix="题"
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="总提交次数"
-                value={stats?.total_submissions || 0}
-                prefix={<ClockCircleOutlined />}
-                suffix="次"
-                valueStyle={{ color: '#faad14' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card>
-              <Statistic
-                title="全站排名"
-                value={stats?.rank || '-'}
-                prefix={<CrownOutlined />}
-                suffix={stats?.rank ? "名" : ""}
-                valueStyle={{ color: '#722ed1' }}
               />
             </Card>
           </Col>
@@ -198,6 +238,18 @@ const Dashboard: React.FC = () => {
               </Link>
             </div>
           )}
+        </Card>
+
+        <Card title="每题个人分数" className="shadow-sm">
+          <Table
+            columns={scoreColumns}
+            dataSource={scores}
+            rowKey={(row) => `${row.problem_id}`}
+            pagination={{ pageSize: 10 }}
+            locale={{
+              emptyText: '暂无题目记录'
+            }}
+          />
         </Card>
       </Spin>
     </div>

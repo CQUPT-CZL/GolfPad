@@ -11,7 +11,7 @@ import os
 
 from backend.database import get_db
 from backend.models import User, UserStats
-from backend.schemas import UserCreate, UserResponse, UserLogin, UserStatsResponse
+from backend.schemas import UserCreate, UserResponse, UserLogin, UserStatsResponse, UserScoresResponse, UserProblemScore
 
 router = APIRouter()
 security = HTTPBearer()
@@ -156,13 +156,19 @@ async def get_my_stats(
     db: Session = Depends(get_db)
 ):
     """Get current user's statistics"""
+    print(f"[users.me.stats] start user_id={current_user.id} username={current_user.username}")
     stats = db.query(UserStats).filter(UserStats.user_id == current_user.id).first()
     if not stats:
         stats = UserStats(user_id=current_user.id)
         db.add(stats)
         db.commit()
         db.refresh(stats)
+        print(f"[users.me.stats] created default stats for user_id={current_user.id}")
     
+    print(f"[users.me.stats] total_score={stats.total_score or 0}, "
+          f"problems_solved={stats.problems_solved or 0}, "
+          f"total_submissions={stats.total_submissions or 0}, "
+          f"rank={stats.rank}")
     return {
         "user_id": current_user.id,
         "username": current_user.username,
@@ -171,3 +177,49 @@ async def get_my_stats(
         "total_submissions": stats.total_submissions or 0,
         "rank": stats.rank
     }
+
+@router.get("/me/scores", response_model=UserScoresResponse)
+async def get_my_scores(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Compute per-problem scores for current user.
+    Rule: score = 2500 - best passed code length; if no passed, 0.001."""
+    from sqlalchemy import func
+    from backend.models import Submission, Problem
+    print(f"[users.me.scores] start user_id={current_user.id} username={current_user.username}")
+    problems = db.query(Problem).all()
+    print(f"[users.me.scores] problems_count={len(problems)}")
+
+    best_lengths = db.query(
+        Submission.problem_id,
+        func.min(Submission.code_length).label('min_length')
+    ).filter(
+        Submission.user_id == current_user.id,
+        Submission.status == "passed"
+    ).group_by(Submission.problem_id).all()
+    print(f"[users.me.scores] best_lengths_raw={best_lengths}")
+    best_map = {pid: length for pid, length in best_lengths}
+    print(f"[users.me.scores] best_map={best_map}")
+
+    items: list[UserProblemScore] = []
+    total = 0.0
+    for p in problems:
+        min_len = best_map.get(p.id)
+        score = float(2500 - min_len) if min_len is not None else 0.001
+        # Round to 3 decimal places to avoid floating point noise
+        score = round(score, 3)
+        total += score
+        print(f"[users.me.scores] problem_id={p.id} title={p.title!r} "
+              f"min_len={min_len} score={score}")
+        items.append(UserProblemScore(
+            problem_id=p.id,
+            task_id=p.task_id,
+            title=p.title,
+            code_length=min_len,
+            score=score
+        ))
+    # Round total as well for consistency
+    total = round(total, 3)
+    print(f"[users.me.scores] total_score={total}")
+    return UserScoresResponse(total_score=total, items=items)
