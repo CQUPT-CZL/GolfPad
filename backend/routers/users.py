@@ -5,7 +5,6 @@ Users API routes
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
@@ -17,19 +16,16 @@ from backend.schemas import UserCreate, UserResponse, UserLogin, UserStatsRespon
 router = APIRouter()
 security = HTTPBearer()
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # JWT settings
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password, stored_password):
+    return plain_password == stored_password
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    return password  # 直接返回明文密码
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
