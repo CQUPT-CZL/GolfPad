@@ -10,7 +10,9 @@ import os
 
 from backend.database import get_db
 from backend.models import Problem, Submission, User
-from backend.schemas import ProblemResponse, ProblemDetail, ProblemCreate, SubmissionHistory
+from backend.schemas import ProblemResponse, ProblemDetail, ProblemCreate, SubmissionHistory, EvaluationResult
+from backend.evaluation import evaluate_code
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -179,3 +181,30 @@ async def get_problem_leaderboard(
         })
     
     return leaderboard
+
+class CodeExecutionRequest(BaseModel):
+    code: str
+    language: str = "python"
+
+@router.post("/{problem_id}/execute", response_model=EvaluationResult)
+async def execute_code(
+    problem_id: int,
+    request: CodeExecutionRequest,
+    db: Session = Depends(get_db)
+):
+    """Execute code against problem test cases"""
+    # Get problem details
+    problem = db.query(Problem).filter(Problem.id == problem_id).first()
+    if not problem:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    
+    # Execute code using evaluation module
+    try:
+        result = await evaluate_code(request.code, request.language, problem.test_cases)
+        return result
+    except Exception as e:
+        return EvaluationResult(
+            status="error",
+            test_results=[],
+            error_message=str(e)
+        )

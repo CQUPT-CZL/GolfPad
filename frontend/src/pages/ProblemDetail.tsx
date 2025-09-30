@@ -7,6 +7,8 @@ import {
   RightOutlined,
 } from '@ant-design/icons'
 import api from '../services/api'
+import CodeEditor from '../components/CodeEditor'
+import CodeExecutionResult from '../components/CodeExecutionResult'
 
 const colors = [
   'rgb(0, 0, 0)',
@@ -106,6 +108,8 @@ const ProblemDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>()
   const [problem, setProblem] = useState<Problem | null>(null)
   const [loading, setLoading] = useState(true)
+  const [executionResult, setExecutionResult] = useState<any>(null)
+  const [isExecuting, setIsExecuting] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -140,6 +144,39 @@ const ProblemDetail: React.FC = () => {
       case 'medium': return '中等'
       case 'hard': return '困难'
       default: return difficulty
+    }
+  }
+
+  const handleRunCode = async (code: string, language: string) => {
+    if (!problem) return
+    
+    try {
+      setIsExecuting(true)
+      setExecutionResult(null)
+      
+      const response = await api.post(`/problems/${problem.id}/execute`, {
+        code,
+        language
+      })
+      
+      setExecutionResult(response.data)
+      
+      if (response.data.status === 'passed') {
+        message.success('🎉 所有测试用例通过！')
+      } else if (response.data.status === 'failed') {
+        message.warning('⚠️ 部分测试用例未通过')
+      } else {
+        message.error('❌ 代码执行出错')
+      }
+    } catch (error) {
+      message.error('代码执行失败，请检查网络连接')
+      setExecutionResult({
+        status: 'error',
+        test_results: [],
+        error_message: '网络请求失败'
+      })
+    } finally {
+      setIsExecuting(false)
     }
   }
 
@@ -224,18 +261,22 @@ const ProblemDetail: React.FC = () => {
         </Card>
       )}
 
-      <Card title="开始解题" className="shadow-sm">
-        <div className="text-center py-8">
-          <CodeOutlined className="text-6xl text-blue-500 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">准备好挑战了吗？</h3>
-          <p className="text-gray-600 mb-6">
-            在线代码编辑器功能正在开发中，敬请期待！
-          </p>
-          <Button type="primary" size="large" disabled>
-            开始编码
-          </Button>
-        </div>
-      </Card>
+      <CodeEditor
+        onRunCode={handleRunCode}
+        onSaveCode={(code, language) => {
+          // TODO: 实现代码保存功能
+          console.log('保存代码:', { code, language })
+        }}
+        onSubmitCode={(code, language) => {
+          // TODO: 实现代码提交功能
+          console.log('提交代码:', { code, language })
+        }}
+      />
+
+      <CodeExecutionResult 
+        result={executionResult}
+        loading={isExecuting}
+      />
     </div>
   )
 }
