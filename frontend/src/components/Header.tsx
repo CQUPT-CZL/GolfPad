@@ -1,5 +1,5 @@
 import React from 'react'
-import { Layout, Menu, Button, Avatar, Dropdown } from 'antd'
+import { Layout, Menu, Button, Avatar } from 'antd'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { 
   HomeOutlined, 
@@ -19,7 +19,19 @@ const Header: React.FC = () => {
   const location = useLocation()
   const { user, logout } = useAuth()
 
-  const menuItems = [
+  const menuItems = []
+
+  // 如果用户已登录，个人中心放在第一位
+  if (user) {
+    menuItems.push({
+      key: '/dashboard',
+      icon: <DashboardOutlined />,
+      label: <Link to="/dashboard" style={{ color: 'inherit', textDecoration: 'none' }}>个人中心</Link>,
+    })
+  }
+
+  // 添加其他菜单项
+  menuItems.push(
     {
       key: '/problems',
       icon: <HomeOutlined />,
@@ -29,41 +41,17 @@ const Header: React.FC = () => {
       key: '/leaderboard',
       icon: <TrophyOutlined />,
       label: <Link to="/leaderboard" style={{ color: 'inherit', textDecoration: 'none' }}>排行榜</Link>,
-    },
-  ]
+    }
+  )
 
+  // 如果用户已登录，添加批量提交
   if (user) {
-    menuItems.push(
-      {
-        key: '/batch-upload',
-        icon: <UploadOutlined />,
-        label: <Link to="/batch-upload" style={{ color: 'inherit', textDecoration: 'none' }}>批量提交</Link>,
-      },
-      {
-        key: '/dashboard',
-        icon: <DashboardOutlined />,
-        label: <Link to="/dashboard" style={{ color: 'inherit', textDecoration: 'none' }}>个人中心</Link>,
-      }
-    )
+    menuItems.push({
+      key: '/batch-upload',
+      icon: <UploadOutlined />,
+      label: <Link to="/batch-upload" style={{ color: 'inherit', textDecoration: 'none' }}>批量提交</Link>,
+    })
   }
-
-  const userMenuItems = user ? [
-    {
-      key: 'dashboard',
-      icon: <DashboardOutlined />,
-      label: '个人中心',
-      onClick: () => navigate('/dashboard'),
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '退出登录',
-      onClick: logout,
-    },
-  ] : []
 
   return (
     <AntHeader style={{ 
@@ -77,7 +65,7 @@ const Header: React.FC = () => {
       top: 0,
       zIndex: 1000
     }}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
         <div style={{ 
           fontSize: '20px', 
           fontWeight: 'bold', 
@@ -95,30 +83,22 @@ const Header: React.FC = () => {
           style={{ 
             border: 'none', 
             background: 'transparent',
-            minWidth: '300px'
+            flex: 1
           }}
         />
       </div>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      {/* 右侧显示用户信息或登录按钮 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginLeft: '16px' }}>
         {user ? (
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              cursor: 'pointer',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <Avatar icon={<UserOutlined />} />
-              <span style={{ color: '#333' }}>{user.username}</span>
-            </div>
-          </Dropdown>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px'
+          }}>
+            <Avatar icon={<UserOutlined />} />
+            <span style={{ color: '#333' }}>{user.username}</span>
+          </div>
         ) : (
           <div style={{ display: 'flex', gap: '8px' }}>
             <Button 
