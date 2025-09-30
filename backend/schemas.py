@@ -4,7 +4,7 @@ Pydantic schemas for request/response models
 
 from pydantic import BaseModel, EmailStr
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 # User schemas
 class UserBase(BaseModel):
@@ -21,6 +21,14 @@ class UserResponse(UserBase):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 class UserLogin(BaseModel):
     username: str
@@ -42,6 +50,14 @@ class ProblemResponse(ProblemBase):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 class ProblemDetail(ProblemResponse):
     test_cases: Dict[str, Any]
@@ -67,6 +83,14 @@ class SubmissionResponse(SubmissionBase):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 class SubmissionHistory(BaseModel):
     id: int
@@ -81,6 +105,14 @@ class SubmissionHistory(BaseModel):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 # Stats schemas
 class UserStatsResponse(BaseModel):
@@ -119,6 +151,16 @@ class ProblemLeaderboardEntry(BaseModel):
     code_length: int
     language: str
     submitted_at: datetime
+    
+    class Config:
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 # Evaluation schemas
 class EvaluationResult(BaseModel):
@@ -156,6 +198,14 @@ class BatchSubmissionResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: (
+                (v if v.tzinfo else v.replace(tzinfo=timezone.utc))
+                .astimezone(timezone.utc)
+                .isoformat()
+                .replace('+00:00', 'Z')
+            )
+        }
 
 class BatchSubmissionStatus(BaseModel):
     id: int
