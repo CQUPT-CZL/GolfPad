@@ -33,8 +33,23 @@ function App() {
         </div>
       </Content>
       <Footer style={{ textAlign: 'center', background: '#f5f5f5', padding: '24px' }}>
-        <div style={{ color: '#666' }}>
+        <div style={{ color: '#666', marginBottom: '12px' }}>
           GolfPad © 2025 - Google Code Golf 2025 竞赛平台 🏌️‍♂️
+        </div>
+        <div style={{ color: '#888', fontSize: '14px' }}>
+          <a 
+            href="https://github.com/CQUPT-CZL/GolfPad" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{ 
+              color: '#1890ff', 
+              textDecoration: 'none',
+              marginRight: '8px'
+            }}
+          >
+            🌟 GitHub
+          </a>
+          | 欢迎大家 Star 和提交 PR！
         </div>
       </Footer>
     </Layout>
