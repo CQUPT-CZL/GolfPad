@@ -14,6 +14,10 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    // **重要：添加这一行来允许通过域名访问**
+    allowedHosts: [
+      'golf.cuizl.cn', // 允许通过您的域名访问
+    ],
   },
   build: {
     outDir: 'dist',
